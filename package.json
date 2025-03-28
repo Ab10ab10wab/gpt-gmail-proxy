@@ -1,0 +1,17 @@
+{
+  "name": "gpt-gmail-calendar-proxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2",
+    "googleapis": "^148.0.0",
+    "open": "^10.1.0"
+  }
+}
