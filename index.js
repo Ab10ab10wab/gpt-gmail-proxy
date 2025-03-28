@@ -5,7 +5,7 @@ const { google } = require('googleapis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ✅ Secure credentials from environment variables
+// 🔐 Environment variables (set in Render)
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
@@ -21,11 +21,11 @@ let calendar = null;
 
 app.use(express.json());
 
-// ✅ STEP 1: Return Google OAuth URL to client (for GPT or manual login)
+// ✅ STEP 1: Return Google OAuth login URL
 app.get('/auth', (req, res) => {
   const scopes = [
     'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/calendar.events'
+    'https://www.googleapis.com/auth/calendar'
   ];
 
   const authUrl = oauth2Client.generateAuthUrl({
@@ -33,11 +33,10 @@ app.get('/auth', (req, res) => {
     scope: scopes
   });
 
-  // Return login URL in JSON format
   res.json({ authUrl });
 });
 
-// ✅ STEP 2: Handle redirect from Google with auth code
+// ✅ STEP 2: Handle the OAuth redirect
 app.get('/oauth2callback', async (req, res) => {
   const code = req.query.code;
 
@@ -48,22 +47,22 @@ app.get('/oauth2callback', async (req, res) => {
     gmail = google.gmail({ version: 'v1', auth: oauth2Client });
     calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    res.send('✅ Auth successful! You can now fetch emails and create events.');
+    res.send('✅ Auth successful! You can now fetch emails and control your calendar.');
   } catch (error) {
     console.error('OAuth error:', error);
     res.status(500).send('OAuth failed');
   }
 });
 
-// ✅ STEP 3: Get 5 unread Gmail messages
+// ✅ STEP 3: Get recent inbox emails
 app.get('/getEmails', async (req, res) => {
   if (!gmail) return res.status(401).send('Not authenticated yet.');
 
   try {
     const response = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 5,
-      q: 'is:unread'
+      maxResults: 10, // You can increase this
+      q: 'in:inbox'
     });
 
     const messages = response.data.messages || [];
@@ -95,7 +94,7 @@ app.get('/getEmails', async (req, res) => {
   }
 });
 
-// ✅ STEP 4: Create a calendar event
+// ✅ STEP 4: Create calendar event
 app.post('/createEvent', async (req, res) => {
   if (!calendar) return res.status(401).send('Not authenticated yet.');
 
@@ -120,10 +119,10 @@ app.post('/createEvent', async (req, res) => {
   }
 });
 
-// ✅ Start the Express server
+// ✅ Start the server
 app.listen(port, () => {
   console.log(`✅ Server running on port ${port}`);
-  console.log(`👉 Auth flow: /auth`);
 });
+
 
 
