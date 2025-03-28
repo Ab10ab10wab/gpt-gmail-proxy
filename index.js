@@ -1,12 +1,11 @@
-require('dotenv').config(); // Load .env for local dev
+require('dotenv').config(); // For local development
 
 const express = require('express');
 const { google } = require('googleapis');
-const open = require('open').default; // Fix for newer Node.js versions
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// 🔐 Load credentials from environment variables
+// ✅ Secure credentials from environment variables
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
@@ -22,8 +21,8 @@ let calendar = null;
 
 app.use(express.json());
 
-// Step 1: Start OAuth login
-app.get('/auth', async (req, res) => {
+// ✅ STEP 1: Return Google OAuth URL to client (for GPT or manual login)
+app.get('/auth', (req, res) => {
   const scopes = [
     'https://www.googleapis.com/auth/gmail.readonly',
     'https://www.googleapis.com/auth/calendar.events'
@@ -34,11 +33,11 @@ app.get('/auth', async (req, res) => {
     scope: scopes
   });
 
-  await open(authUrl);
-  res.send('Login window opened. Complete the login in your browser.');
+  // Return login URL in JSON format
+  res.json({ authUrl });
 });
 
-// Step 2: OAuth callback after login
+// ✅ STEP 2: Handle redirect from Google with auth code
 app.get('/oauth2callback', async (req, res) => {
   const code = req.query.code;
 
@@ -56,7 +55,7 @@ app.get('/oauth2callback', async (req, res) => {
   }
 });
 
-// 📬 Get 5 unread emails
+// ✅ STEP 3: Get 5 unread Gmail messages
 app.get('/getEmails', async (req, res) => {
   if (!gmail) return res.status(401).send('Not authenticated yet.');
 
@@ -96,7 +95,7 @@ app.get('/getEmails', async (req, res) => {
   }
 });
 
-// 🗓️ Create a calendar event
+// ✅ STEP 4: Create a calendar event
 app.post('/createEvent', async (req, res) => {
   if (!calendar) return res.status(401).send('Not authenticated yet.');
 
@@ -121,7 +120,10 @@ app.post('/createEvent', async (req, res) => {
   }
 });
 
+// ✅ Start the Express server
 app.listen(port, () => {
-  console.log(`✅ Server running at http://localhost:${port}`);
-  console.log(`👉 Start the OAuth flow: http://localhost:${port}/auth`);
+  console.log(`✅ Server running on port ${port}`);
+  console.log(`👉 Auth flow: /auth`);
 });
+
+
